@@ -3,8 +3,6 @@ from tqdm.notebook import tqdm
 import itertools
 import numpy as np
 import scipy as sp
-import warnings
-warnings.filterwarnings("ignore")
 
 pi = np.pi
 
@@ -313,16 +311,16 @@ class ED():
         Clabels1 = np.array(labs)
 
         for i in range(len(labs)):
-            if labs[i][site] == 2:
-                Clabels1[i][site] = 0
-            elif labs[i][site] == 4:
-                Clabels1[i][site] = 0
-            elif labs[i][site] == 3:
-                Clabels1[i][site] = 4
-            elif labs[i][site] == 1:
-                Clabels1[i][site] = 2
-            else:
-                pass
+            match labs[i][site]:
+                case 2:
+                    Clabels1[i][site] = 0
+                case 4:
+                    Clabels1[i][site] = 0
+                case 3:
+                    Clabels1[i][site] = 4
+                case 1:
+                    Clabels1[i][site] = 2
+
         return Clabels1
     
     def Op_rep(self, labs, Clabs):
@@ -345,60 +343,3 @@ class ED():
         Crep = np.transpose(Cdagrep)
 
         return Crep, Cdagrep
-    
-class Mecstat():
-    def __init__(self, eigE):
-        self.eigE = eigE
-
-    def Part_fun(self, beta):
-        Z = sum(np.exp(-beta*self.eigE))
-        return Z
-    
-    def E_mean(self, beta):
-        Em = sum(self.eigE*np.exp(-beta*self.eigE))/self.Part_fun(beta)
-        E2m = sum((self.eigE**2)*np.exp(-beta*self.eigE))/self.Part_fun(beta)
-        Evar = E2m - Em**2
-        return Em, E2m, Evar
-    
-    def Sh_entr(self, beta):
-        P = np.exp(-beta*self.eigE)/self.Part_fun(beta)
-        Shannon_entropy = -sum(P*np.log(P))
-        return Shannon_entropy
-
-    
-
-from scipy import linalg
-            
-HS1 = ED(3)
-labels1 = HS1.Gera_ind()
-
-states = HS1.Sym(labels1, 0, 4)
-n_states = len(states)
-H = HS1.H_hop(n_states, 0, states) + HS1.H_mu(n_states, 2.5, states) + HS1.H_int(n_states, 5, states)
-
-eig = linalg.eigvalsh(H)
-
-T = np.arange(0.05, 5, 0.1)
-beta = 1/T
-
-Stat = Mecstat(eig)
-
-Em, Estd = [], []
-S = []
-
-for bet in beta:
-    em, _, evar = Stat.E_mean(bet)
-    Em.append(em)
-    Estd.append(np.sqrt(evar))
-    S.append(Stat.Sh_entr(bet)/4)
-
-Em = np.array(Em)
-Estd = np.array(Estd)
-
-plt.plot(np.abs(Estd/Em))
-plt.show()
-
-#plt.imshow(H)
-#plt.colorbar()
-#plt.show()
-print('Terminei')
