@@ -16,8 +16,6 @@ function EGSN(Lmax)
 
     L = [floor(Int,x) for x in L]
 
-
-
     let
     for N in L
         #N = 5

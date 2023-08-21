@@ -10,7 +10,7 @@ class ED():
     def __init__(self, N):
         self.N = N
 
-    def Gera_ind(self):
+    def Gera_ind(self):#Gera os indices dos estados
         labels = []
         for label in itertools.product(range(1, 5), repeat=self.N): #Este loop faz um loop recursivo, que serve para automatizar o processo de escolha do número de sítios
             labels.append(list(label))
@@ -19,7 +19,7 @@ class ED():
 
         return labels
     
-    def Sym(self, labels, S, N_e):
+    def Sym(self, labels, S, N_e):#Acha o bloco com alguma configuracao desejada (se possivel)
         labelsS = np.zeros((len(labels), len(labels[0])))
         labelsN = np.zeros((len(labels), len(labels[0])))
         for i in range(len(labels)):
@@ -54,7 +54,7 @@ class ED():
 
         return states
     
-    def C(self, sit, spin, state):
+    def C(self, sit, spin, state):#Aplica C num estado
         new_state = np.zeros(self.N)
 
         for i in range(self.N):
@@ -85,7 +85,7 @@ class ED():
 
         return new_state
 
-    def C_dag(self, sit, spin, state):
+    def C_dag(self, sit, spin, state):#Aplica Cdagger num estado
         new_state1 = np.zeros(self.N)
 
         for i in range(self.N):
@@ -111,7 +111,7 @@ class ED():
 
         return new_state1
     
-    def H_mu(self, n_states, mu, labels):
+    def H_mu(self, n_states, mu, labels):#Gera H_mu
 
         H1 = np.zeros((n_states, n_states))
 
@@ -192,7 +192,7 @@ class ED():
                         H2[i][j] += -t
         return H2
     
-    def H_int(self, n_states, U, labels):
+    def H_int(self, n_states, U, labels):#
 
         H3 = np.zeros((n_states, n_states))
 
