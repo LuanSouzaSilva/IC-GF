@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 import itertools
 import numpy as np
 import scipy as sp
+import warnings
+warnings.filterwarnings("ignore")
 
 pi = np.pi
 
@@ -137,6 +139,7 @@ class ED():
                             count += 1
                     if count == self.N:
                         H1[i][j] += -mu
+            
         return H1
 
     def H_hop(self, n_states, t, labels):
@@ -213,6 +216,7 @@ class ED():
                         H3[i][j] += U
 
         return H3
+    
     def Config(self, lab, mu, t, U):
         config = []
         for i in range(len(lab)):
@@ -240,7 +244,7 @@ class ED():
         List_labels = []
 
         for conf in config:
-            List_labels.append(self.Sym(lab, self.N, conf[1], conf[0]))
+            List_labels.append(self.Sym(lab, conf[1], conf[0]))
 
         List_H = []
 
@@ -249,7 +253,7 @@ class ED():
             H2 = self.H_int(len(lab1), U, lab1)
             H3 = self.H_mu(len(lab1), mu, lab1)
 
-            HU = H1 + H2 + H3
+            HU = H1 + H2 + H3 + (U*self.N/4)*np.identity(len(H1))
             List_H.append(HU)
 
         return np.array(config), np.array(List_labels), np.array(List_H)
@@ -269,7 +273,7 @@ class ED():
 
         return np.array(eigsL), np.array(eigsvL)
     
-    def Find_GS(eigvals, eigvecs, conf):
+    def Find_GS(self, eigvals, eigvecs, conf):
         count = 0
         GSE = min(eigvals[0])
         GS = eigvecs[count][0]
@@ -281,11 +285,11 @@ class ED():
                 GS = eigvecs[count][0]
                 eigp = eigs
                 configGS = conf[count]
-                count += 1
+            count += 1
 
         return configGS, GS, GSE
     
-    def Find_ind(confGS, configs):
+    def Find_ind(self, confGS, configs):
         confgs = np.abs(confGS)
 
         confC = confgs - np.array([1, 1])
@@ -307,7 +311,7 @@ class ED():
 
         return indexes
     
-    def C_Cdag(labs, site): #Ne -> Ne+1
+    def C_Cdag(self, labs, site): #Ne -> Ne+1
         Clabels1 = np.array(labs)
 
         for i in range(len(labs)):
@@ -337,9 +341,64 @@ class ED():
                 else:
                     aux.append(0)
 
-                Cdagrep.append(aux)
+            Cdagrep.append(aux)
 
         Cdagrep = np.array(Cdagrep)
         Crep = np.transpose(Cdagrep)
 
         return Crep, Cdagrep
+    
+    def Time_ev(self, T, dt, Crep, Cdagrep, CrepP, CdagrepP, H_1, H, H1, GS):
+        im = 0 + 1j
+        t = np.arange(0, T+dt, dt)
+
+        GF1 = np.zeros(len(t), dtype = complex)
+        GF2 = np.zeros(len(t), dtype = complex)
+        GS = GS.astype(complex)
+        t = t.astype(complex)
+        Crep = Crep.astype(complex)
+        Cdagrep = Cdagrep.astype(complex)
+        CrepP = CrepP.astype(complex)
+        CdagrepP = CdagrepP.astype(complex)
+        H_1 = H_1.astype(complex)
+        H1 = H1.astype(complex)
+        H = H.astype(complex)
+
+        for i in tqdm(range(len(t))):
+            U = sp.linalg.expm(-im*H*t[i])
+            Udag = sp.linalg.expm(im*H*t[i])
+
+            A = np.matmul(Udag, Crep)
+            B = np.matmul(A, sp.linalg.expm(-im*H_1*t[i]))
+            C = np.matmul(B, Cdagrep)
+            D = np.matmul(C, GS)
+
+            GF1[i] = np.vdot(GS, D)
+
+            A1 = np.matmul(CdagrepP, sp.linalg.expm(im*H1*t[i]))
+            B1 = np.matmul(A1, CrepP)
+            C1 = np.matmul(B1, U)
+            D1 = np.matmul(C1, GS)
+
+            GF2[i] = np.vdot(GS, D1)
+
+        GF = -im*(GF1 + GF2)
+
+        return np.real(t), GF
+    
+    def FFTGF(self, t, GF):
+        rho = -np.imag(np.fft.fft(GF))/pi
+        omega = np.fft.fftfreq(len(GF), pi/len(GF))*2*10/max(t)
+
+        rho = rho/len(rho)
+
+        return rho, omega
+    
+    def plottGF(self, t, GF):
+        fig, ax = plt.subplots(2, 1, figsize = (12, 8))
+
+        ax[0].plot(t, np.real(GF))
+
+        ax[1].plot(t, np.imag(GF))
+
+        plt.show()
