@@ -54,15 +54,19 @@ rho, om = HS1.FFTGF(t, GF)
 
 tf = time()
 
-print(round((tf-t0), 1))
+print()
+print(f'Tempo de processamento: {round((tf-t0), 1)}s')
+print()
 
 en = sp.linalg.eigvalsh(List_H[iGS])
 
-fig = plt.figure(figsize = (12, 8))
+#fig = plt.figure(figsize = (12, 8))
 
-plt.plot(om, np.abs(rho))
+#HS1.plottGF(t, GF)
+
+#plt.plot(om, np.abs(rho))
 #for e in en:
   #plt.axvline(e, c = 'green')
-plt.xlim(-15, 15)
+#plt.xlim(-15, 15)
 
-plt.show()
+#plt.show()
