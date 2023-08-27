@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from numba import jit
 from tqdm import tqdm
 import itertools
 import numpy as np
@@ -55,7 +56,7 @@ class ED():
                 states.append(list(labels[i]))
 
         return states
-    
+    #@jit
     def C(self, sit, spin, state):#Aplica C num estado
         new_state = np.zeros(self.N)
 
@@ -86,7 +87,7 @@ class ED():
                 new_state[i] = state[i]
 
         return new_state
-
+    #@jit
     def C_dag(self, sit, spin, state):#Aplica Cdagger num estado
         new_state1 = np.zeros(self.N)
 
@@ -113,11 +114,12 @@ class ED():
 
         return new_state1
     
+    @jit(cache = True)
     def H_mu(self, n_states, mu, labels):#Gera H_mu
 
         H1 = np.zeros((n_states, n_states))
 
-        for k in range(self.N):
+        for k in tqdm(range(self.N)):
             for i in range(len(labels)):
                 C0 = self.C(k, 2, labels[i])
                 Cdag = self.C_dag(k, 2, C0)
@@ -142,10 +144,11 @@ class ED():
             
         return H1
 
+    @jit(cache = True)
     def H_hop(self, n_states, t, labels):
         H2 = np.zeros((n_states, n_states))
 
-        for k in range(self.N-1):
+        for k in tqdm(range(self.N-1)):
             for i in range(len(labels)):
                 C0 = self.C(k, 2, labels[i])
                 Cdag = self.C_dag(k+1, 2, C0)
@@ -195,11 +198,12 @@ class ED():
                         H2[i][j] += -t
         return H2
     
+    @jit(cache = True)
     def H_int(self, n_states, U, labels):#
 
         H3 = np.zeros((n_states, n_states))
 
-        for k in range(self.N):
+        for k in tqdm(range(self.N)):
             for i in range(len(labels)):
                 C0 = self.C(k, 2, labels[i])
                 Cdag = self.C_dag(k, 2, C0)
@@ -216,7 +220,7 @@ class ED():
                         H3[i][j] += U
 
         return H3
-    
+    #@jit(cache = True)
     def Config(self, lab, mu, t, U):
         config = []
         for i in range(len(lab)):
@@ -258,9 +262,10 @@ class ED():
 
         return np.array(config), np.array(List_labels), np.array(List_H)
     
+    @jit(cache = True)
     def Find_Blocks(self, lab, mu, t, U):
 
-        config, List_labels, List_H = self.Config(lab, mu, t, U)
+        _, _, List_H = self.Config(lab, mu, t, U)
 
         eigsL, eigsvL = [], []
 
@@ -273,6 +278,7 @@ class ED():
 
         return np.array(eigsL), np.array(eigsvL)
     
+    @jit(cache = True)
     def Find_GS(self, eigvals, eigvecs, conf):
         count = 0
         GSE = min(eigvals[0])
@@ -289,6 +295,7 @@ class ED():
 
         return configGS, GS, GSE
     
+    @jit(cache = True)
     def Find_ind(self, confGS, configs):
         confgs = np.abs(confGS)
 
@@ -311,6 +318,7 @@ class ED():
 
         return indexes
     
+    #@jit
     def C_Cdag(self, labs, site): #Ne -> Ne+1
         Clabels1 = np.array(labs)
 
@@ -327,6 +335,7 @@ class ED():
 
         return Clabels1
     
+    #@jit
     def Op_rep(self, labs, Clabs):
         Cdagrep = []
         for i in range(len(labs)):
@@ -348,6 +357,7 @@ class ED():
 
         return Crep, Cdagrep
     
+    @jit(cache = True)
     def Time_ev(self, T, dt, Crep, Cdagrep, CrepP, CdagrepP, H_1, H, H1, GS):
         im = 0 + 1j
         t = np.arange(0, T+dt, dt)
