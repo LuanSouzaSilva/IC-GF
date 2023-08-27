@@ -88,20 +88,6 @@ end
 #print(L)
 #plot(L, x, seriestype=:scatter)
 
-let
-    N = 5
-    t = 1
-    U = 2
-    mu = U/2
-    cutoff = 1E-8
-    tau = 0.1
-    ttotal = 5.0
-
-    x = zeros(ComplexF64, 0)
-  
-   
-
-
 
 
 print("Terminei")
