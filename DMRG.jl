@@ -78,7 +78,7 @@ end
 
 #main()
 
-function main1(; N=10, cutoff=1E-8, δt=0.1, ttotal=50.0)
+function main1(; N=10, cutoff=1E-8, δt=0.1, ttotal=1.0)
     # Compute the number of steps to do
     Nsteps = Int(ttotal / δt)
   
