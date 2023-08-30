@@ -9,7 +9,7 @@ from StatMec import Mecstat as MS
 
 t0 = time()
 
-N = 6
+N = 4
             
 Nt = N
 St = N%2
