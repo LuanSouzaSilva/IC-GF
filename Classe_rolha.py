@@ -408,7 +408,13 @@ class ED():
         fig, ax = plt.subplots(2, 1, figsize = (12, 8))
 
         ax[0].plot(t, np.real(GF))
+        ax[0].set_ylabel('Re(GF(t))', fontsize = 20)
 
         ax[1].plot(t, np.imag(GF))
+        ax[1].set_ylabel('Im(GF(t))', fontsize = 20)
+        
+        plt.xlabel('t', fontsize = 20)
+        
+        plt.savefig("tGF.pdf")
 
         plt.show()
