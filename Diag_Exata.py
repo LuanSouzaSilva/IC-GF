@@ -4,7 +4,7 @@ import numpy as np
 from time import time
 from scipy.linalg import eigvalsh
 
-from Classe_rolha import ED
+from Novo.ExDiag import ED
 from StatMec import Mecstat as MS
 
 t0 = time()

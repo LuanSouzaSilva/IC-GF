@@ -13,16 +13,19 @@ class ED():
     def __init__(self, N):
         self.N = N
 
+    #Gera os indices dos estados (do espaço de Hilbert Completo)
     def Gera_ind(self):#Gera os indices dos estados
         labels = []
-        for label in itertools.product(range(1, 5), repeat=self.N): #Este loop faz um loop recursivo, que serve para automatizar o processo de escolha do número de sítios
+        #Este loop faz um loop recursivo, que serve para automatizar o processo de escolha do número de sítios
+        for label in itertools.product(range(1, 5), repeat=self.N): 
             labels.append(list(label))
 
         labels = np.array(labels)
 
         return labels
     
-    def Sym(self, labels, S, N_e):#Acha o bloco com alguma configuracao desejada (se possivel)
+    #Acha o bloco com alguma configuracao desejada (se possivel)
+    def Sym(self, labels, S, N_e):
         labelsS = np.zeros((len(labels), len(labels[0])))
         labelsN = np.zeros((len(labels), len(labels[0])))
         for i in range(len(labels)):
@@ -56,8 +59,9 @@ class ED():
                 states.append(list(labels[i]))
 
         return states
-    #@jit
-    def C(self, sit, spin, state):#Aplica C num estado
+    
+    #Aplica C num estado
+    def C(self, sit, spin, state):
         new_state = np.zeros(self.N)
 
         for i in range(self.N):
@@ -87,8 +91,9 @@ class ED():
                 new_state[i] = state[i]
 
         return new_state
-    #@jit
-    def C_dag(self, sit, spin, state):#Aplica Cdagger num estado
+    
+    #Aplica Cdagger num estado
+    def C_dag(self, sit, spin, state):
         new_state1 = np.zeros(self.N)
 
         for i in range(self.N):
@@ -115,7 +120,7 @@ class ED():
         return new_state1
     
     @jit(cache = True)
-    def H_mu(self, n_states, mu, labels):#Gera H_mu
+    def H_mu(self, n_states, mu, labels):#Gera o termo com potencial quimico
 
         H1 = np.zeros((n_states, n_states))
 
@@ -145,7 +150,7 @@ class ED():
         return H1
 
     @jit(cache = True)
-    def H_hop(self, n_states, t, labels):
+    def H_hop(self, n_states, t, labels):#Gera o termo de hopping
         H2 = np.zeros((n_states, n_states))
 
         for k in tqdm(range(self.N-1)):
@@ -199,7 +204,7 @@ class ED():
         return H2
     
     @jit(cache = True)
-    def H_int(self, n_states, U, labels):#
+    def H_int(self, n_states, U, labels):#Gera o termo de interacao
 
         H3 = np.zeros((n_states, n_states))
 
@@ -220,7 +225,9 @@ class ED():
                         H3[i][j] += U
 
         return H3
-    #@jit(cache = True)
+    
+    #Este metodo encontra todos os blocos da hamiltoniana do espaço completo
+    #Com suas respectivas configurações (numero de particulas e spin total)
     def Config(self, lab, mu, t, U):
         config = []
         for i in range(len(lab)):
@@ -262,6 +269,7 @@ class ED():
 
         return np.array(config), np.array(List_labels), np.array(List_H)
     
+    #Diagonaliza os blocos
     @jit(cache = True)
     def Find_Blocks(self, lab, mu, t, U):
 
@@ -278,23 +286,25 @@ class ED():
 
         return np.array(eigsL), np.array(eigsvL)
     
+    #Encontra o bloco que contém o estado funtamental
+    #E calcula o estado fundamental junto de sua respectiva energia
     @jit(cache = True)
     def Find_GS(self, eigvals, eigvecs, conf):
         count = 0
         GSE = min(eigvals[0])
         GS = eigvecs[count][0]
-        eigp = eigvals[0]
         configGS = conf[count]
         for eigs in eigvals:
             if min(eigs) < GSE:
                 GSE = min(eigs)
                 GS = eigvecs[count][0]
-                eigp = eigs
                 configGS = conf[count]
             count += 1
 
         return configGS, GS, GSE
     
+    #Encontra os indices do estado fundamental e de dois blocos adjacentes
+    #No caso, seria Um bloco com (Ne-1, St-1) e (Ne+1, St+1)
     @jit(cache = True)
     def Find_ind(self, confGS, configs):
         confgs = np.abs(confGS)
@@ -318,7 +328,7 @@ class ED():
 
         return indexes
     
-    #@jit
+    #aplica um operador local
     def C_Cdag(self, labs, site): #Ne -> Ne+1
         Clabels1 = np.array(labs)
 
@@ -335,7 +345,7 @@ class ED():
 
         return Clabels1
     
-    #@jit
+    #Encontra a representação dos operadores de criacao e aniquilacao locais
     def Op_rep(self, labs, Clabs):
         Cdagrep = []
         for i in range(len(labs)):
@@ -357,6 +367,7 @@ class ED():
 
         return Crep, Cdagrep
     
+    #Faz a evolucao temporal real das funcoes de Green
     @jit(cache = True)
     def Time_ev(self, T, dt, Crep, Cdagrep, CrepP, CdagrepP, H_1, H, H1, GS):
         im = 0 + 1j
@@ -396,6 +407,7 @@ class ED():
 
         return np.real(t), GF
     
+    #Encontra a LDOS a partir da tRGF
     def FFTGF(self, t, GF):
         rho = -np.imag(np.fft.fft(GF))/pi
         omega = np.fft.fftfreq(len(GF), pi/len(GF))*2*10/max(t)
@@ -404,6 +416,7 @@ class ED():
 
         return rho, omega
     
+    #Plota a tRGF
     def plottGF(self, t, GF):
         fig, ax = plt.subplots(2, 1, figsize = (12, 8))
 
